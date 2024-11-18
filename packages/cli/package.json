@@ -1,6 +1,6 @@
 {
   "name": "@mondrian-framework/cli",
-  "version": "2.0.62",
+  "version": "2.0.63",
   "main": "build/index.js",
   "bin": {
     "mondrian": "./build/index.js"
@@ -15,7 +15,7 @@
     "commander": "11.1.0"
   },
   "peerDependencies": {
-    "@mondrian-framework/ci-tools": "^2.0.62",
-    "@mondrian-framework/cli-commander": "^2.0.62"
+    "@mondrian-framework/ci-tools": "^2.0.63",
+    "@mondrian-framework/cli-commander": "^2.0.63"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@mondrian-framework/module",
-  "version": "2.0.62",
+  "version": "2.0.63",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
@@ -16,6 +16,6 @@
     "@opentelemetry/api-logs": "^0.52.1"
   },
   "peerDependencies": {
-    "@mondrian-framework/model": "^2.0.62"
+    "@mondrian-framework/model": "^2.0.63"
   }
 }

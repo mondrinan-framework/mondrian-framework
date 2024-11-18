@@ -1,5 +1,15 @@
 # @mondrian-framework/rate-limiter
 
+## 2.0.63
+
+### Patch Changes
+
+- Minor fix
+- Updated dependencies
+  - @mondrian-framework/model@2.0.63
+  - @mondrian-framework/module@2.0.63
+  - @mondrian-framework/utils@2.0.63
+
 ## 2.0.62
 
 ### Patch Changes

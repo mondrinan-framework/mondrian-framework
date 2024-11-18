@@ -1,6 +1,6 @@
 {
   "name": "@mondrian-framework/rest",
-  "version": "2.0.62",
+  "version": "2.0.63",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
@@ -15,9 +15,9 @@
     "openapi-types": "^12.1.3"
   },
   "peerDependencies": {
-    "@mondrian-framework/model": "^2.0.62",
-    "@mondrian-framework/module": "^2.0.62",
-    "@mondrian-framework/utils": "^2.0.62",
+    "@mondrian-framework/model": "^2.0.63",
+    "@mondrian-framework/module": "^2.0.63",
+    "@mondrian-framework/utils": "^2.0.63",
     "@opentelemetry/sdk-node": "^0.52.1"
   }
 }

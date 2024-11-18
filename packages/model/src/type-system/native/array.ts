@@ -205,7 +205,7 @@ class ArrayTypeImpl<M extends model.Mutability, T extends model.Type>
     object: Object,
     options: Required<decoding.Options>,
   ): decoding.Result<model.Infer<model.ArrayType<M, T>>> {
-    return objectToArray(object).chain((object) => this.decodeArrayValues(Object.values(object), options))
+    return objectToArray(object).chain((array) => this.decodeArrayValues(array, options))
   }
 
   arbitraryInternal(maxDepth: number): gen.Arbitrary<model.Infer<model.ArrayType<M, T>>> {
@@ -242,7 +242,9 @@ function objectToArray(object: Object): decoding.Result<any[]> {
  *          is, the object is in the form `{0: "a", 1: "b", 2: "c", ...}`
  */
 function keysAsConsecutiveNumbers(object: Object): number[] | undefined {
-  const keys = Object.keys(object).map(Number).sort()
+  const keys = Object.keys(object)
+    .map(Number)
+    .sort((a, b) => a - b)
   if (keys.length === 0) {
     return []
   }

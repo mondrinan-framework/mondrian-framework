@@ -239,21 +239,21 @@ export function build<const Fs extends functions.Functions>(
         const myMeter = opentelemetry.metrics.getMeter(`@mondrian-framework/module`)
         const histogram = myMeter.createHistogram('task.duration', { unit: 'milliseconds', valueType: ValueType.INT })
         const counter = myMeter.createCounter('task.invocation')
-        const wrappedFunction: functions.FunctionImplementation<
-          model.Type,
-          model.Type,
-          functions.ErrorType,
-          functions.OutputRetrieveCapabilities,
-          provider.Providers,
-          guard.Guards
-        > = new OpentelemetryFunction(
+        const wrappedFunction = new OpentelemetryFunction(
           func,
           {
             ...options,
             openteletry: typeof module.options?.opentelemetry === 'object' ? module.options.opentelemetry : undefined,
           },
           { histogram, tracer, counter },
-        )
+        ) as functions.FunctionImplementation<
+          model.Type,
+          model.Type,
+          functions.ErrorType,
+          functions.OutputRetrieveCapabilities,
+          provider.Providers,
+          guard.Guards
+        >
         return [functionName, wrappedFunction]
       } else {
         return [functionName, new BaseFunction(func, options)]

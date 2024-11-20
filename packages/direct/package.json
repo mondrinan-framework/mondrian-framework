@@ -12,7 +12,7 @@
     "coverage": "vitest run --coverage"
   },
   "peerDependencies": {
-    "fastify": "^4.28.1",
+    "fastify": "^5.1.0",
     "@mondrian-framework/model": "^2.0.63",
     "@mondrian-framework/module": "^2.0.63",
     "@mondrian-framework/utils": "^2.0.63",

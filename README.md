@@ -161,20 +161,11 @@ const api = rest.build({
   version: 2,
   functions: {
     register: [
-      {
-        method: 'put',
-        path: '/user',
-        errorCodes: { weakPassword: 400, emailAlreadyUsed: 401 },
-        version: { max: 1 },
-      },
-      {
-        method: 'post',
-        path: '/login',
-        errorCodes: { weakPassword: 400, emailAlreadyUsed: 403 },
-        version: { min: 2 },
-      },
+      { method: 'put', path: '/user' },
+      { method: 'post', path: '/login' },
     ],
   },
+  errorCodes: { weakPassword: 400, emailAlreadyUsed: 401 },
 })
 
 //Start the server

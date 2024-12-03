@@ -23,6 +23,6 @@
   },
   "devDependencies": {
     "@fast-check/vitest": "^0.1.4",
-    "@vitest/coverage-v8": "^0.34.6"
+    "@vitest/coverage-v8": "^2.0.0"
   }
 }

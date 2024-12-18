@@ -18,7 +18,7 @@
     "spinup": "npm ci && npm run build --workspaces --if-present && npm run example --workspace=@mondrian-framework/example"
   },
   "devDependencies": {
-    "@changesets/cli": "2.27.10",
+    "@changesets/cli": "2.27.11",
     "@trivago/prettier-plugin-sort-imports": "4.3.0",
     "prettier": "3.4.1",
     "rimraf": "6.0.1",

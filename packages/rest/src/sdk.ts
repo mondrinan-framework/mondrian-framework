@@ -1,14 +1,16 @@
-import { functions, module, retrieve } from '.'
-import { logger as mondrianLogger } from '.'
+import { rest } from '.'
+import { emptyInternalData, generateOpenapiInput } from './openapi'
+import { methodFromOptions } from './utils'
 import { result, model } from '@mondrian-framework/model'
+import { functions, retrieve } from '@mondrian-framework/module'
 
-export type Sdk<F extends functions.Functions, Metadata> = {
-  functions: SdkFunctions<F, Metadata>
-  withMetadata: (metadata: Metadata) => Sdk<F, Metadata>
+export type Sdk<Fs extends functions.FunctionInterfaces> = {
+  functions: SdkFunctions<Fs>
+  withHeaders: (headers: Record<string, string>) => Sdk<Fs>
 }
 
-type SdkFunctions<F extends functions.Functions, Metadata> = {
-  [K in keyof F]: SdkFunction<F[K]['input'], F[K]['output'], F[K]['errors'], F[K]['retrieve'], Metadata>
+type SdkFunctions<F extends functions.FunctionInterfaces> = {
+  [K in keyof F]: SdkFunction<F[K]['input'], F[K]['output'], F[K]['errors'], F[K]['retrieve']>
 }
 
 type SdkFunction<
@@ -16,16 +18,14 @@ type SdkFunction<
   OutputType extends model.Type,
   E extends functions.ErrorType,
   C extends retrieve.FunctionCapabilities | undefined,
-  Metadata,
 > =
   model.IsLiteral<InputType, undefined> extends true
-    ? <const P extends retrieve.FromType<OutputType, Exclude<C, undefined>>>(options?: {
-        retrieve?: P
-        metadata?: Metadata
-      }) => Promise<SdkFunctionResult<OutputType, E, C, P>>
+    ? <const P extends retrieve.FromType<OutputType, Exclude<C, undefined>>>(
+        retrieve?: P,
+      ) => Promise<SdkFunctionResult<OutputType, E, C, P>>
     : <const P extends retrieve.FromType<OutputType, Exclude<C, undefined>>>(
         input: model.Infer<InputType>,
-        options?: { retrieve?: P; metadata?: Metadata },
+        retrieve?: P,
       ) => Promise<SdkFunctionResult<OutputType, E, C, P>>
 
 type SdkFunctionResult<
@@ -156,54 +156,94 @@ type IsEntity<T extends model.Type>
   : [T] extends [(() => infer T1 extends model.Type)] ? IsEntity<T1>
   : false
 
-class SdkBuilder<const Metadata> {
-  private metadata?: Metadata
+class SdkBuilder {
+  private headers?: Record<string, string>
 
-  constructor(metadata?: Metadata) {
-    this.metadata = metadata
+  constructor(headers?: Record<string, string>) {
+    this.headers = headers
   }
 
-  public build<Fs extends functions.FunctionImplementations>({
-    module,
-    context,
+  public build<Fs extends functions.FunctionInterfaces>({
+    endpoint,
+    rest,
   }: {
-    module: module.Module<Fs>
-    context: (args: { metadata?: Metadata }) => Promise<module.FunctionsToContextInput<Fs>>
-  }): Sdk<Fs, Metadata> {
-    const presetLogger = mondrianLogger.build({ moduleName: module.name, server: 'LOCAL' })
+    endpoint: string
+    rest: rest.ApiSpecification<Fs>
+  }): Sdk<Fs> {
+    endpoint = endpoint.endsWith('/') ? endpoint.slice(0, -1) : endpoint
     const fs = Object.fromEntries(
-      Object.entries(module.functions).map(([functionName, functionBody]) => {
+      Object.entries(rest.module.functions).map(([functionName, functionBody]) => {
+        const concreteInputType = model.concretise(functionBody.input)
+        const concreteOutputType = model.concretise(functionBody.output)
+        const concreteErrorTypes = Object.fromEntries(
+          Object.entries(functionBody.errors ?? {}).map(
+            ([errorName, errorType]) => [errorName, model.concretise(errorType)] as const,
+          ),
+        )
+        const lastSpecification = Array.isArray(rest.functions[functionName])
+          ? rest.functions[functionName].slice(-1)[0]
+          : rest.functions[functionName]
+        const { output } = lastSpecification
+          ? generateOpenapiInput({
+              functionBody,
+              functionName,
+              internalData: emptyInternalData(undefined),
+              specification: lastSpecification,
+            })
+          : { output: undefined }
         const wrapper = async (p1: unknown, p2: unknown) => {
+          if (!output || !lastSpecification) {
+            throw new Error(`The function ${functionName} is not exposed through the REST API`)
+          }
           let input: unknown = undefined
-          let options: {
-            retrieve?: retrieve.GenericRetrieve
-            metadata?: Metadata
-          } = {}
+          let retrieve: retrieve.GenericRetrieve | undefined = undefined
           if (model.isLiteral(functionBody.input, undefined)) {
-            options = p1 as { retrieve?: retrieve.GenericRetrieve; metadata?: Metadata }
+            retrieve = p1 as retrieve.GenericRetrieve | undefined
           } else {
             input = p1
-            options = p2 as { retrieve?: retrieve.GenericRetrieve; metadata?: Metadata }
+            retrieve = p2 as retrieve.GenericRetrieve | undefined
           }
-          const thisLogger = presetLogger.updateContext({ operationName: functionName })
           try {
-            const contextInput = await context({ metadata: options?.metadata ?? this.metadata })
-            const result = await functionBody.rawApply({
-              rawInput: input as never,
-              rawRetrieve: options?.retrieve ?? {},
-              contextInput: contextInput as Record<string, unknown>,
-              //tracer: functionBody.tracer, //TODO: add opentelemetry istrumentation
-              logger: thisLogger,
-              decodingOptions: module.options?.preferredDecodingOptions,
-            })
-            if (!functionBody.errors) {
-              if (result.isOk) {
-                return result.value
-              } else {
-                throw new Error(`Unexpected failure result for function ${functionName}`)
-              }
+            const encodedInput = concreteInputType.encode(input as never)
+            if (encodedInput.isFailure) {
+              throw new Error(`Invalid input for function ${functionName}: ${JSON.stringify(encodedInput.error)}`)
             }
-            return result
+            const { body, path } = output(encodedInput.value)
+            const method = lastSpecification?.method ?? methodFromOptions(functionBody.options)
+            const url = `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}`
+            console.log(method, url, body)
+            const fetchResult = await fetch(
+              `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}`,
+              {
+                body: JSON.stringify(body),
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...this.headers,
+                },
+                method,
+              },
+            )
+
+            if (fetchResult.status === 200) {
+              const fetchBodyResult = await fetchResult.json()
+              const functionResult = concreteOutputType.decode(fetchBodyResult)
+              if (functionResult.isFailure) {
+                throw new Error(`Invalid output for function ${functionName}: ${JSON.stringify(functionResult.error)}`)
+              }
+              return result.ok(functionResult.value)
+            } else {
+              const error = await fetchResult.json()
+              const keyToParse = Object.keys(error).find((key) => Object.keys(concreteErrorTypes).includes(key))
+              if (typeof error === 'object' && keyToParse) {
+                const errorType = concreteErrorTypes[keyToParse]
+                const decodedError = errorType.decode(error[keyToParse])
+                if (decodedError.isFailure) {
+                  throw new Error(`Invalid error for function ${functionName}: ${JSON.stringify(decodedError.error)}`)
+                }
+                return result.fail({ [keyToParse]: decodedError.value })
+              }
+              throw new Error(`Error calling function ${functionName}: ${JSON.stringify(error)}`)
+            }
           } catch (error) {
             throw error
           }
@@ -212,19 +252,20 @@ class SdkBuilder<const Metadata> {
       }),
     )
     return {
-      functions: fs as unknown as SdkFunctions<Fs, Metadata>,
-      withMetadata: (metadata) => withMetadata(metadata).build({ module, context }),
+      functions: fs as unknown as SdkFunctions<Fs>,
+      withHeaders: (headers) => withHeaders(headers).build({ rest, endpoint }),
     }
   }
 }
 
-export function withMetadata<const Metadata>(metadata?: Metadata): SdkBuilder<Metadata> {
-  return new SdkBuilder(metadata)
+export function withHeaders(headers?: Record<string, string>): SdkBuilder {
+  return new SdkBuilder(headers)
 }
 
-export function build<Fs extends functions.FunctionImplementations>(args: {
-  module: module.Module<Fs>
-  context: (args: { metadata?: unknown }) => Promise<module.FunctionsToContextInput<Fs>>
-}): Sdk<Fs, unknown> {
-  return withMetadata().build(args)
+export function build<Fs extends functions.FunctionInterfaces>(args: {
+  endpoint: string
+  rest: rest.ApiSpecification<Fs>
+  headers?: Record<string, string>
+}): Sdk<Fs> {
+  return withHeaders(args.headers).build({ endpoint: args.endpoint, rest: args.rest })
 }

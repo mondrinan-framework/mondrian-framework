@@ -1,8 +1,8 @@
 import { ApiSpecification, FunctionSpecifications } from './api'
-import { decodeQueryObject, methodFromOptions } from './utils'
+import { decodeQueryObject, encodeQueryObject, methodFromOptions } from './utils'
 import { model } from '@mondrian-framework/model'
 import { functions, retrieve } from '@mondrian-framework/module'
-import { isArray, http } from '@mondrian-framework/utils'
+import { isArray, http, JSONType } from '@mondrian-framework/utils'
 import BigNumber from 'bignumber.js'
 import { OpenAPIV3_1 } from 'openapi-types'
 
@@ -37,6 +37,7 @@ export function fromModule<Fs extends functions.FunctionInterfaces>({
       const { parameters, requestBody } = generateOpenapiInput({
         specification,
         functionBody,
+        functionName,
         internalData,
       })
       const schema = modelToSchema(functionBody.output, internalData)
@@ -148,15 +149,18 @@ export function fromModule<Fs extends functions.FunctionInterfaces>({
 export function generateOpenapiInput({
   specification,
   functionBody,
+  functionName,
   internalData,
 }: {
   specification: FunctionSpecifications
+  functionName: string
   functionBody: functions.FunctionInterface<model.Type, model.Type, functions.ErrorType>
   internalData: InternalData
 }): {
   parameters?: (OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.ParameterObject)[]
   requestBody?: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.RequestBodyObject
   input: (request: http.Request) => unknown
+  output: (value: JSONType) => { path: string; body: unknown }
 } {
   const parametersInPath = specification.path
     ? [...(specification.path.match(/{(.*?)}/g) ?? [])].map((v) => v.replace('{', '').replace('}', '')).filter((v) => v)
@@ -166,6 +170,7 @@ export function generateOpenapiInput({
     return {
       parameters: [],
       input: () => null,
+      output: () => ({ path: specification.path ?? `/${functionName}`, body: undefined }),
     }
   }
   const concreteInputType = model.concretise(inputType)
@@ -197,6 +202,9 @@ export function generateOpenapiInput({
       parameters: [{ in: 'path', name: parametersInPath[0], schema: schema as any, required: true }],
       input: (request) => {
         return request.params[parametersInPath[0]]
+      },
+      output: (value) => {
+        return { path: specification.path?.replace(`{${parametersInPath[0]}}`, String(value)) ?? ``, body: undefined }
       },
     }
   }
@@ -245,6 +253,28 @@ export function generateOpenapiInput({
           }
           return object
         },
+        output(value) {
+          const object = value as Record<string, JSONType>
+          const path = parametersInPath.reduce(
+            (path, parameter) => {
+              return path.replace(`{${parameter}}`, String(object[parameter]))
+            },
+            specification.path ?? `/${functionName}`,
+          )
+          let parameters = ''
+          for (const [key, subtype] of Object.entries(concreteInputType.fields as model.Types).filter(
+            ([fieldName]) => !parametersInPath.includes(fieldName),
+          )) {
+            if (model.isScalar(subtype)) {
+              parameters = parameters + `${key}=${String(object[key])}&`
+            } else {
+              const v = encodeQueryObject(object[key], key)
+              parameters = parameters + v + '&'
+            }
+          }
+          parameters = parameters.endsWith('&') ? parameters.slice(0, -1) : parameters
+          return { path: parameters.length > 0 ? `${path}?${parameters}` : path, body: undefined }
+        },
       }
     }
     if (parametersInPath.length === 0) {
@@ -260,8 +290,13 @@ export function generateOpenapiInput({
             schema: schema as any,
           },
         ],
-        input: (request: http.Request) => {
+        input(request: http.Request) {
           return decodeQueryObject(request.query, specification.inputName ?? 'input')
+        },
+        output(value) {
+          const path = specification.path ?? `/${functionName}`
+          const parameters = encodeQueryObject(value, specification.inputName ?? 'input')
+          return { path: parameters.length > 0 ? `${path}?${parameters}` : path, body: undefined }
         },
       }
     }
@@ -278,6 +313,9 @@ export function generateOpenapiInput({
           },
         },
         input: (request) => request.body,
+        output: (value) => {
+          return { path: specification.path ?? `/${functionName}`, body: value }
+        },
       }
     }
     if (concreteInputType.kind === model.Kind.Object || concreteInputType.kind === model.Kind.Entity) {
@@ -296,6 +334,18 @@ export function generateOpenapiInput({
             return { ...result, ...request.body }
           }
           return result
+        },
+        output(value) {
+          const object = value as Record<string, JSONType>
+          const objectWithoutPath = { ...object }
+          const path = parametersInPath.reduce(
+            (path, parameter) => {
+              delete objectWithoutPath[parameter]
+              return path.replace(`{${parameter}}`, String(object[parameter]))
+            },
+            specification.path ?? `/${functionName}`,
+          )
+          return { path, body: objectWithoutPath }
         },
       }
     }

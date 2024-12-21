@@ -160,7 +160,7 @@ export function generateOpenapiInput({
   parameters?: (OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.ParameterObject)[]
   requestBody?: OpenAPIV3_1.ReferenceObject | OpenAPIV3_1.RequestBodyObject
   input: (request: http.Request) => unknown
-  output: (value: JSONType) => { path: string; body: unknown }
+  output: (value: JSONType) => { path: string; body: unknown; params: string | undefined }
 } {
   const parametersInPath = specification.path
     ? [...(specification.path.match(/{(.*?)}/g) ?? [])].map((v) => v.replace('{', '').replace('}', '')).filter((v) => v)
@@ -170,7 +170,7 @@ export function generateOpenapiInput({
     return {
       parameters: [],
       input: () => null,
-      output: () => ({ path: specification.path ?? `/${functionName}`, body: undefined }),
+      output: () => ({ path: specification.path ?? `/${functionName}`, body: undefined, params: undefined }),
     }
   }
   const concreteInputType = model.concretise(inputType)
@@ -204,7 +204,11 @@ export function generateOpenapiInput({
         return request.params[parametersInPath[0]]
       },
       output: (value) => {
-        return { path: specification.path?.replace(`{${parametersInPath[0]}}`, String(value)) ?? ``, body: undefined }
+        return {
+          path: specification.path?.replace(`{${parametersInPath[0]}}`, String(value)) ?? ``,
+          body: undefined,
+          params: undefined,
+        }
       },
     }
   }
@@ -261,19 +265,19 @@ export function generateOpenapiInput({
             },
             specification.path ?? `/${functionName}`,
           )
-          let parameters = ''
+          let params: string | undefined = undefined
           for (const [key, subtype] of Object.entries(concreteInputType.fields as model.Types).filter(
             ([fieldName]) => !parametersInPath.includes(fieldName),
           )) {
             if (model.isScalar(subtype)) {
-              parameters = parameters + `${key}=${String(object[key])}&`
+              params = (params ?? '') + `${key}=${String(object[key])}&`
             } else {
               const v = encodeQueryObject(object[key], key)
-              parameters = parameters + v + '&'
+              params = (params ?? '') + v + '&'
             }
           }
-          parameters = parameters.endsWith('&') ? parameters.slice(0, -1) : parameters
-          return { path: parameters.length > 0 ? `${path}?${parameters}` : path, body: undefined }
+          params = params && params.endsWith('&') ? params.slice(0, -1) : params
+          return { path, body: undefined, params }
         },
       }
     }
@@ -295,8 +299,8 @@ export function generateOpenapiInput({
         },
         output(value) {
           const path = specification.path ?? `/${functionName}`
-          const parameters = encodeQueryObject(value, specification.inputName ?? 'input')
-          return { path: parameters.length > 0 ? `${path}?${parameters}` : path, body: undefined }
+          const params = encodeQueryObject(value, specification.inputName ?? 'input')
+          return { path, body: undefined, params }
         },
       }
     }
@@ -314,7 +318,7 @@ export function generateOpenapiInput({
         },
         input: (request) => request.body,
         output: (value) => {
-          return { path: specification.path ?? `/${functionName}`, body: value }
+          return { path: specification.path ?? `/${functionName}`, body: value, params: undefined }
         },
       }
     }
@@ -345,7 +349,7 @@ export function generateOpenapiInput({
             },
             specification.path ?? `/${functionName}`,
           )
-          return { path, body: objectWithoutPath }
+          return { path, body: objectWithoutPath, params: undefined }
         },
       }
     }

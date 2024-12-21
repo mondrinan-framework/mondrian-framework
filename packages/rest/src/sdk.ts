@@ -1,6 +1,6 @@
 import { rest } from '.'
 import { emptyInternalData, generateOpenapiInput } from './openapi'
-import { methodFromOptions } from './utils'
+import { encodeQueryObject, methodFromOptions } from './utils'
 import { result, model } from '@mondrian-framework/model'
 import { functions, retrieve } from '@mondrian-framework/module'
 
@@ -204,25 +204,29 @@ class SdkBuilder {
             retrieve = p2 as retrieve.GenericRetrieve | undefined
           }
           try {
-            const encodedInput = concreteInputType.encode(input as never)
-            if (encodedInput.isFailure) {
-              throw new Error(`Invalid input for function ${functionName}: ${JSON.stringify(encodedInput.error)}`)
-            }
-            const { body, path } = output(encodedInput.value)
+            const encodedInput = concreteInputType.encodeWithoutValidation(input as never)
+            const { body, path, params } = output(encodedInput)
             const method = lastSpecification?.method ?? methodFromOptions(functionBody.options)
-            const url = `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}`
-            console.log(method, url, body)
-            const fetchResult = await fetch(
-              `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}`,
-              {
-                body: JSON.stringify(body),
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...this.headers,
-                },
-                method,
+            let query: string | undefined
+            if (retrieve) {
+              const where = retrieve.where ? encodeQueryObject(retrieve.where, 'where') : null
+              const select = retrieve.select ? encodeQueryObject(retrieve.select, 'select') : null
+              const order = retrieve.orderBy ? encodeQueryObject(retrieve.orderBy, 'orderBy') : null
+              const skip = retrieve.skip ? `skip=${retrieve.skip}` : null
+              const take = retrieve.take ? `take=${retrieve.take}` : null
+              query = [params, where, select, order, skip, take].filter((x) => x).join('&')
+            } else {
+              query = params
+            }
+            const url = `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}${query ? `?${query}` : ''}`
+            const fetchResult = await fetch(url, {
+              body: JSON.stringify(body),
+              headers: {
+                ...(body ? { 'Content-Type': 'application/json' } : {}),
+                ...this.headers,
               },
-            )
+              method,
+            })
 
             if (fetchResult.status === 200) {
               const fetchBodyResult = await fetchResult.json()

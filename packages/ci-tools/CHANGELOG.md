@@ -1,5 +1,17 @@
 # @mondrian-framework/ci-tools
 
+## 2.0.64
+
+### Patch Changes
+
+- Rest client
+- Updated dependencies
+  - @mondrian-framework/aws-lambda-rest@2.0.64
+  - @mondrian-framework/model@2.0.64
+  - @mondrian-framework/module@2.0.64
+  - @mondrian-framework/rest@2.0.64
+  - @mondrian-framework/rest-fastify@2.0.64
+
 ## 2.0.63
 
 ### Patch Changes

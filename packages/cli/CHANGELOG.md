@@ -1,5 +1,14 @@
 # @mondrian-framework/cli
 
+## 2.0.64
+
+### Patch Changes
+
+- Rest client
+- Updated dependencies
+  - @mondrian-framework/ci-tools@2.0.64
+  - @mondrian-framework/cli-commander@2.0.64
+
 ## 2.0.63
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @mondrian-framework/utils
 
+## 2.0.64
+
+### Patch Changes
+
+- Rest client
+
 ## 2.0.63
 
 ### Patch Changes

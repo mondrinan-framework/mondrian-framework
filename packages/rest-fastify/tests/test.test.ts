@@ -49,8 +49,18 @@ test('rest-fastify e2e test', async () => {
     errors: { BadInput: error.standard.BadInput, Unauthorized },
     options: { operation: { command: 'create' } },
   })
+  const fTextHtml = functions.define({
+    output: model.string(),
+  })
+  const fError1 = functions.define({
+    output: model.string(),
+  })
+  const fError2 = functions.define({
+    output: model.string(),
+    errors: { Unauthorized },
+  })
   const moduleInterface = module.define({
-    functions: { f1, f2, f3: f2, f4: f2, f5: f2, fComplex },
+    functions: { f1, f2, f3: f2, f4: f2, f5: f2, fComplex, fTextHtml, fError1, fError2 },
     name: 'test',
   })
   const restDefinition = rest.define({
@@ -66,6 +76,9 @@ test('rest-fastify e2e test', async () => {
       f4: { method: 'post', path: '/f4/{a}' },
       f5: { method: 'delete', path: '/f5' },
       fComplex: { path: '/fComplex' },
+      fTextHtml: { method: 'get', path: '/fTextHtml', contentType: 'text/html' },
+      fError1: { method: 'get', path: '/fError1' },
+      fError2: { method: 'get', path: '/fError2' },
     },
   })
 
@@ -94,8 +107,33 @@ test('rest-fastify e2e test', async () => {
       return result.ok([{ age, friends: [], id: '123', name, retrieve }])
     },
   })
+  const fTextHtmlImpl = fTextHtml.implement({
+    async body() {
+      return result.ok('<html>Hello, World!</html>')
+    },
+  })
+  const fError1Impl = fError1.implement({
+    async body() {
+      throw new Error('Error 1')
+    },
+  })
+  const fError2Impl = fError2.implement({
+    async body() {
+      throw new Error('Error 2')
+    },
+  })
   const moduleImpl = moduleInterface.implement({
-    functions: { f1: f1Impl, f2: f2Impl, f3: f2Impl, f4: f2Impl, f5: f2Impl, fComplex: fComplexImpl },
+    functions: {
+      f1: f1Impl,
+      f2: f2Impl,
+      f3: f2Impl,
+      f4: f2Impl,
+      f5: f2Impl,
+      fComplex: fComplexImpl,
+      fTextHtml: fTextHtmlImpl,
+      fError1: fError1Impl,
+      fError2: fError2Impl,
+    },
   })
   const api = rest.build({ ...restDefinition, module: moduleImpl })
   const server = fastify()
@@ -175,5 +213,15 @@ test('rest-fastify e2e test', async () => {
       },
     },
   ])
+
+  const response8 = await client.functions.fTextHtml()
+  expect(response8).toEqual('<html>Hello, World!</html>')
+
+  await expect(client.functions.fError1()).rejects.toThrow(
+    'Error calling function fError1. Internal Server Error: Error 1',
+  )
+  await expect(client.functions.fError2()).rejects.toThrow(
+    'Error calling function fError2. Internal Server Error: Error 2',
+  )
   await server.close()
 })

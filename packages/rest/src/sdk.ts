@@ -203,40 +203,46 @@ class SdkBuilder {
             input = p1
             retrieve = p2 as retrieve.GenericRetrieve | undefined
           }
-          try {
-            const encodedInput = concreteInputType.encodeWithoutValidation(input as never)
-            const { body, path, params } = output(encodedInput)
-            const method = lastSpecification?.method ?? methodFromOptions(functionBody.options)
-            let query: string | undefined
-            if (retrieve) {
-              const where = retrieve.where ? encodeQueryObject(retrieve.where, 'where') : null
-              const select = retrieve.select ? encodeQueryObject(retrieve.select, 'select') : null
-              const order = retrieve.orderBy ? encodeQueryObject(retrieve.orderBy, 'orderBy') : null
-              const skip = retrieve.skip ? `skip=${retrieve.skip}` : null
-              const take = retrieve.take ? `take=${retrieve.take}` : null
-              query = [params, where, select, order, skip, take].filter((x) => x).join('&')
-            } else {
-              query = params
+          const encodedInput = concreteInputType.encodeWithoutValidation(input as never)
+          const { body, path, params } = output(encodedInput)
+          const method = lastSpecification?.method ?? methodFromOptions(functionBody.options)
+          let query: string | undefined
+          if (retrieve) {
+            const where = retrieve.where ? encodeQueryObject(retrieve.where, 'where') : null
+            const select = retrieve.select ? encodeQueryObject(retrieve.select, 'select') : null
+            const order = retrieve.orderBy ? encodeQueryObject(retrieve.orderBy, 'orderBy') : null
+            const skip = retrieve.skip ? `skip=${retrieve.skip}` : null
+            const take = retrieve.take ? `take=${retrieve.take}` : null
+            query = [params, where, select, order, skip, take].filter((x) => x).join('&')
+          } else {
+            query = params
+          }
+          const url = `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}${query ? `?${query}` : ''}`
+          const fetchResult = await fetch(url, {
+            body: JSON.stringify(body),
+            headers: {
+              ...(body ? { 'Content-Type': 'application/json' } : {}),
+              ...this.headers,
+            },
+            method,
+          })
+          const resultBody = await fetchResult.text()
+          if (fetchResult.status === 200) {
+            const fetchBodyResult = fetchResult.headers.get('Content-Type')?.includes('application/json')
+              ? JSON.parse(resultBody)
+              : resultBody
+            const functionResult = concreteOutputType.decode(fetchBodyResult)
+            if (functionResult.isFailure) {
+              throw new Error(`Invalid output for function ${functionName}: ${JSON.stringify(functionResult.error)}`)
             }
-            const url = `${endpoint}/api/v${lastSpecification.version?.max ?? lastSpecification.version?.min ?? rest.version}${path}${query ? `?${query}` : ''}`
-            const fetchResult = await fetch(url, {
-              body: JSON.stringify(body),
-              headers: {
-                ...(body ? { 'Content-Type': 'application/json' } : {}),
-                ...this.headers,
-              },
-              method,
-            })
-
-            if (fetchResult.status === 200) {
-              const fetchBodyResult = await fetchResult.json()
-              const functionResult = concreteOutputType.decode(fetchBodyResult)
-              if (functionResult.isFailure) {
-                throw new Error(`Invalid output for function ${functionName}: ${JSON.stringify(functionResult.error)}`)
-              }
+            if (functionBody.errors) {
               return result.ok(functionResult.value)
             } else {
-              const error = await fetchResult.json()
+              return functionResult.value
+            }
+          } else if (functionBody.errors) {
+            try {
+              const error = JSON.parse(resultBody)
               const keyToParse = Object.keys(error).find((key) => Object.keys(concreteErrorTypes).includes(key))
               if (typeof error === 'object' && keyToParse) {
                 const errorType = concreteErrorTypes[keyToParse]
@@ -246,11 +252,11 @@ class SdkBuilder {
                 }
                 return result.fail({ [keyToParse]: decodedError.value })
               }
-              throw new Error(`Error calling function ${functionName}: ${JSON.stringify(error)}`)
-            }
-          } catch (error) {
-            throw error
+            } catch {}
           }
+          throw new Error(
+            `Error calling function ${functionName}. ${fetchResult.statusText}: ${resultBody}`,
+          )
         }
         return [functionName, wrapper]
       }),

@@ -1,6 +1,6 @@
 {
   "name": "@mondrian-framework/rate-limiter",
-  "version": "2.0.64",
+  "version": "2.0.65",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
@@ -12,9 +12,9 @@
   },
   "peerDependencies": {
     "@redis/client": "^1.6.0",
-    "@mondrian-framework/model": "^2.0.64",
-    "@mondrian-framework/module": "^2.0.64",
-    "@mondrian-framework/utils": "^2.0.64",
+    "@mondrian-framework/model": "^2.0.65",
+    "@mondrian-framework/module": "^2.0.65",
+    "@mondrian-framework/utils": "^2.0.65",
     "@opentelemetry/sdk-node": "^0.52.1"
   }
 }

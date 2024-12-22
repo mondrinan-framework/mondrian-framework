@@ -1,4 +1,4 @@
-import { module, functions, sdk, security, provider } from '../src'
+import { module, functions, client as clientBuilder, security, provider } from '../src'
 import { result, model } from '@mondrian-framework/model'
 import { describe, expect, expectTypeOf, test } from 'vitest'
 
@@ -162,7 +162,7 @@ test('Real example', async () => {
     functions: { login, register, completeProfile, noInputOrOutput },
   })
 
-  const client = sdk.withMetadata<{ ip?: string; authorization?: string }>().build({
+  const client = clientBuilder.withMetadata<{ ip?: string; authorization?: string }>().build({
     module: m,
     context: async ({ metadata }) => {
       return { ip: metadata?.ip ?? 'local', authorization: metadata?.authorization }
@@ -333,7 +333,7 @@ describe('Default middlewares', () => {
       policies: () => security.on(type).allows({ selection: true }),
     })
 
-    const client = sdk.build({
+    const client = clientBuilder.build({
       module: m,
       async context() {
         return {}
@@ -382,7 +382,7 @@ test('Return types', async () => {
     functions: { login },
   })
 
-  const client = sdk.withMetadata<{ ip?: string; authorization?: string }>().build({
+  const client = clientBuilder.withMetadata<{ ip?: string; authorization?: string }>().build({
     module: m,
     context: async ({ metadata }) => {
       return { ip: metadata?.ip ?? 'local', authorization: metadata?.authorization }
@@ -482,7 +482,7 @@ test('Errors return', async () => {
     options: { checkOutputType: 'throw' },
   })
 
-  const client = sdk.withMetadata<{ ip?: string; authorization?: string }>().build({
+  const client = clientBuilder.withMetadata<{ ip?: string; authorization?: string }>().build({
     module: m,
     context: async () => {
       return {}

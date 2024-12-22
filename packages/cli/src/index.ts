@@ -2,13 +2,13 @@
 import { module as ciToolsModule, GraphQLSchemaType, OASSchema } from '@mondrian-framework/ci-tools'
 import { cli } from '@mondrian-framework/cli-commander'
 import { model, result } from '@mondrian-framework/model'
-import { functions, module, sdk } from '@mondrian-framework/module'
+import { functions, module, client as clientBuilder } from '@mondrian-framework/module'
 import fs from 'fs'
 
 /**
  * This is the client that will be used to call the utilities in ci-tools
  */
-const client = sdk.build({
+const client = clientBuilder.build({
   module: ciToolsModule,
   context: async () => ({}),
 })

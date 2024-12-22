@@ -1,4 +1,4 @@
-import { functions, module, sdk, provider, guard } from '../src'
+import { functions, module, client as clientBuilder, provider, guard } from '../src'
 import { model, result } from '@mondrian-framework/model'
 import { expect, test } from 'vitest'
 
@@ -76,14 +76,14 @@ test('provider dependencies', async () => {
     functions: { f },
   })
 
-  const client = sdk.build({
+  const client = clientBuilder.build({
     module: m,
     async context() {
       return { a: 'a', b: 'b', c: 'c', d: 'd', e: 'e', f: 'f' }
     },
   })
 
-  const client2 = sdk.build({
+  const client2 = clientBuilder.build({
     module: m,
     async context() {
       return { a: '_', b: 'b', c: 'c', d: 'd', e: 'e', f: 'f' }

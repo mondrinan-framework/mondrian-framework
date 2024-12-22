@@ -1,7 +1,7 @@
 import { serve } from '../src'
 import { model, result } from '@mondrian-framework/model'
 import { functions, module, error, provider, retrieve } from '@mondrian-framework/module'
-import { rest, sdk } from '@mondrian-framework/rest'
+import { rest, client } from '@mondrian-framework/rest'
 import fastify from 'fastify'
 import { expect, test } from 'vitest'
 
@@ -141,24 +141,24 @@ test('rest-fastify e2e test', async () => {
 
   await server.listen({ port: 4040 })
 
-  const client = sdk.build({
+  const restClient = client.build({
     endpoint: 'http://localhost:4040/',
     rest: restDefinition,
     headers: { authorization: 'test' },
   })
 
-  const response0 = await client.withHeaders({}).functions.f1(123)
+  const response0 = await restClient.withHeaders({}).functions.f1(123)
   expect(response0.isFailure && response0.error).toEqual({
     Unauthorized: { message: 'Authorization required', reason: 'no auth' },
   })
 
-  const response1 = await client.functions.f1(123)
+  const response1 = await restClient.functions.f1(123)
   expect(response1.isOk && response1.value).toEqual(123 * 2)
 
-  const response2 = await client.functions.f2({ a: 4, b: 3 })
+  const response2 = await restClient.functions.f2({ a: 4, b: 3 })
   expect(response2.isOk && response2.value).toEqual(4 * 3)
 
-  const response3 = await client.functions.f2({ a: 'hello', b: 3 } as any)
+  const response3 = await restClient.functions.f2({ a: 'hello', b: 3 } as any)
   expect(response3.isFailure && response3.error).toEqual({
     BadInput: {
       errors: [
@@ -173,23 +173,25 @@ test('rest-fastify e2e test', async () => {
     },
   })
 
-  const response4 = await client.functions.f3({ a: 4, b: 3 })
+  const response4 = await restClient.functions.f3({ a: 4, b: 3 })
   expect(response4.isOk && response4.value).toEqual(4 * 3)
 
-  const response5 = await client.functions.f4({ a: 4, b: 3 })
+  const response5 = await restClient.functions.f4({ a: 4, b: 3 })
   expect(response5.isOk && response5.value).toEqual(4 * 3)
 
-  const response6 = await client.functions.f5({ a: 4, b: 3 })
+  const response6 = await restClient.functions.f5({ a: 4, b: 3 })
   expect(response6.isOk && response6.value).toEqual(4 * 3)
 
-  const response7 = await client.functions.fComplex(
+  const response7 = await restClient.functions.fComplex(
     { name: 'John', age: 30, friends: ['123'] },
     {
-      select: { name: true, friends: { take: 10, select: { age: true } } },
-      where: { name: { equals: 'John' }, AND: [{ age: { in: [1, 2, 3] } }] },
-      orderBy: [{ name: 'asc' }, { age: 'desc' }],
-      skip: 0,
-      take: 10,
+      retrieve: {
+        select: { name: true, friends: { take: 10, select: { age: true } } },
+        where: { name: { equals: 'John' }, AND: [{ age: { in: [1, 2, 3] } }] },
+        orderBy: [{ name: 'asc' }, { age: 'desc' }],
+        skip: 0,
+        take: 10,
+      },
     },
   )
   expect(response7.isOk && response7.value).toEqual([
@@ -214,13 +216,13 @@ test('rest-fastify e2e test', async () => {
     },
   ])
 
-  const response8 = await client.functions.fTextHtml()
+  const response8 = await restClient.functions.fTextHtml()
   expect(response8).toEqual('<html>Hello, World!</html>')
 
-  await expect(client.functions.fError1()).rejects.toThrow(
+  await expect(restClient.functions.fError1()).rejects.toThrow(
     'Error calling function fError1. Internal Server Error: Error 1',
   )
-  await expect(client.functions.fError2()).rejects.toThrow(
+  await expect(restClient.functions.fError2()).rejects.toThrow(
     'Error calling function fError2. Internal Server Error: Error 2',
   )
   await server.close()

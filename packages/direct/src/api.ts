@@ -5,7 +5,7 @@ import { functions, module } from '@mondrian-framework/module'
  * The Direct API specification of a mondrian {@link module.ModuleInterface Module Interface}
  * It does not contains the implementation. In order to instantiate this you should use {@link define}.
  *
- * It's also the minimum information needed to instantiate an sdk client.
+ * It's also the minimum information needed to instantiate a client.
  */
 export type ApiSpecification<Fs extends functions.FunctionInterfaces, Exclusions extends { [K in keyof Fs]?: true }> = {
   exclusions: Exclusions

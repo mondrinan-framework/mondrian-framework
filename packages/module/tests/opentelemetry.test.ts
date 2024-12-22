@@ -1,4 +1,4 @@
-import { functions, module, sdk } from '../src'
+import { functions, module, client as clientBuilder } from '../src'
 import { result, model } from '@mondrian-framework/model'
 import logsAPI from '@opentelemetry/api-logs'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
@@ -59,7 +59,7 @@ describe('Opentelemetry', () => {
       },
     })
 
-    const client = sdk.build({
+    const client = clientBuilder.build({
       module: m,
       async context() {
         return {}

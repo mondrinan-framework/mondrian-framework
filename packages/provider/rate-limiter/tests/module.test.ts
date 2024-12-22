@@ -1,7 +1,7 @@
 import { rateLimiter } from '../src'
 import { Rate } from '../src/rate'
 import { result, model } from '@mondrian-framework/model'
-import { module, functions, sdk, provider } from '@mondrian-framework/module'
+import { module, functions, client as clientBuilder, provider } from '@mondrian-framework/module'
 import { expect, test } from 'vitest'
 
 test('Rate limiter middleware', async () => {
@@ -54,7 +54,7 @@ test('Rate limiter middleware', async () => {
     functions: { login },
   })
 
-  const client = sdk.withMetadata<{ ip?: string }>().build({
+  const client = clientBuilder.withMetadata<{ ip?: string }>().build({
     module: m,
     context: async ({ metadata }) => {
       return { ip: metadata?.ip ?? 'local' }

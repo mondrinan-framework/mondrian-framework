@@ -1,4 +1,4 @@
-import { Project } from '../src/sdk'
+import { Project } from '../src/client'
 import { model } from '@mondrian-framework/model'
 import { describe, expectTypeOf, test } from 'vitest'
 

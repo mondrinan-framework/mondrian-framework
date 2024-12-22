@@ -24,6 +24,7 @@ export function fromFunction<Fs extends functions.FunctionImplementations, Serve
 }): http.Handler<ServerContext> {
   const gatherRawInput = generateGetInputFromRequest({
     functionBody,
+    functionName,
     specification,
     customTypeSchemas: api.customTypeSchemas,
   })
@@ -130,6 +131,7 @@ function gatherRawRetrieve(request: http.Request): retrieve.GenericRetrieve {
 
 function generateGetInputFromRequest(args: {
   specification: FunctionSpecifications
+  functionName: string
   functionBody: functions.FunctionImplementation
   customTypeSchemas: CustomTypeSpecifications | undefined
 }): (request: http.Request) => unknown {

@@ -1,21 +1,20 @@
 import { functions, module, retrieve } from '.'
 import { logger as mondrianLogger } from '.'
-import { ErrorType } from './function'
 import { result, model } from '@mondrian-framework/model'
 
-export type Sdk<F extends functions.Functions, Metadata> = {
-  functions: SdkFunctions<F, Metadata>
-  withMetadata: (metadata: Metadata) => Sdk<F, Metadata>
+export type Client<F extends functions.Functions, Metadata> = {
+  functions: ClientFunctions<F, Metadata>
+  withMetadata: (metadata: Metadata) => Client<F, Metadata>
 }
 
-type SdkFunctions<F extends functions.Functions, Metadata> = {
-  [K in keyof F]: SdkFunction<F[K]['input'], F[K]['output'], F[K]['errors'], F[K]['retrieve'], Metadata>
+type ClientFunctions<F extends functions.Functions, Metadata> = {
+  [K in keyof F]: ClientFunction<F[K]['input'], F[K]['output'], F[K]['errors'], F[K]['retrieve'], Metadata>
 }
 
-type SdkFunction<
+type ClientFunction<
   InputType extends model.Type,
   OutputType extends model.Type,
-  E extends ErrorType,
+  E extends functions.ErrorType,
   C extends retrieve.FunctionCapabilities | undefined,
   Metadata,
 > =
@@ -23,15 +22,15 @@ type SdkFunction<
     ? <const P extends retrieve.FromType<OutputType, Exclude<C, undefined>>>(options?: {
         retrieve?: P
         metadata?: Metadata
-      }) => Promise<SdkFunctionResult<OutputType, E, C, P>>
+      }) => Promise<ClientFunctionResult<OutputType, E, C, P>>
     : <const P extends retrieve.FromType<OutputType, Exclude<C, undefined>>>(
         input: model.Infer<InputType>,
         options?: { retrieve?: P; metadata?: Metadata },
-      ) => Promise<SdkFunctionResult<OutputType, E, C, P>>
+      ) => Promise<ClientFunctionResult<OutputType, E, C, P>>
 
-type SdkFunctionResult<
+export type ClientFunctionResult<
   O extends model.Type,
-  E extends ErrorType,
+  E extends functions.ErrorType,
   C extends retrieve.FunctionCapabilities | undefined,
   P extends retrieve.FromType<O, C>,
 > = [Exclude<E, undefined>] extends [never]
@@ -43,7 +42,7 @@ type SdkFunctionResult<
  * If not explicitly required, all embedded entities are excluded.
  **/
 // prettier-ignore
-export type Project<T extends model.Type, R extends retrieve.GenericRetrieve>
+type Project<T extends model.Type, R extends retrieve.GenericRetrieve>
   = [R] extends [{ select: infer Select }] ? Select extends retrieve.GenericSelect ? InferSelection<T, Select>
     : InferReturn<T>
   : InferReturn<T>
@@ -157,7 +156,7 @@ type IsEntity<T extends model.Type>
   : [T] extends [(() => infer T1 extends model.Type)] ? IsEntity<T1>
   : false
 
-class SdkBuilder<const Metadata> {
+class ClientBuilder<const Metadata> {
   private metadata?: Metadata
 
   constructor(metadata?: Metadata) {
@@ -170,7 +169,7 @@ class SdkBuilder<const Metadata> {
   }: {
     module: module.Module<Fs>
     context: (args: { metadata?: Metadata }) => Promise<module.FunctionsToContextInput<Fs>>
-  }): Sdk<Fs, Metadata> {
+  }): Client<Fs, Metadata> {
     const presetLogger = mondrianLogger.build({ moduleName: module.name, server: 'LOCAL' })
     const fs = Object.fromEntries(
       Object.entries(module.functions).map(([functionName, functionBody]) => {
@@ -213,19 +212,19 @@ class SdkBuilder<const Metadata> {
       }),
     )
     return {
-      functions: fs as unknown as SdkFunctions<Fs, Metadata>,
+      functions: fs as unknown as ClientFunctions<Fs, Metadata>,
       withMetadata: (metadata) => withMetadata(metadata).build({ module, context }),
     }
   }
 }
 
-export function withMetadata<const Metadata>(metadata?: Metadata): SdkBuilder<Metadata> {
-  return new SdkBuilder(metadata)
+export function withMetadata<const Metadata>(metadata?: Metadata): ClientBuilder<Metadata> {
+  return new ClientBuilder(metadata)
 }
 
 export function build<Fs extends functions.FunctionImplementations>(args: {
   module: module.Module<Fs>
   context: (args: { metadata?: unknown }) => Promise<module.FunctionsToContextInput<Fs>>
-}): Sdk<Fs, unknown> {
+}): Client<Fs, unknown> {
   return withMetadata().build(args)
 }

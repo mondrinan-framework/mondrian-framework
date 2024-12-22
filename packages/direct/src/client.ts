@@ -1,23 +1,23 @@
 import { ApiSpecification } from './api'
 import { Response } from './handler'
 import { result, model } from '@mondrian-framework/model'
-import { functions, sdk, retrieve } from '@mondrian-framework/module'
+import { functions, client, retrieve } from '@mondrian-framework/module'
 import { flatMapObject, http } from '@mondrian-framework/utils'
 
-export type Sdk<
+export type DirectClient<
   Fs extends functions.FunctionInterfaces,
   E extends functions.ErrorType,
   Exclusions extends { [K in keyof Fs]?: true },
 > = {
-  functions: SdkFunctions<Omit<Fs, keyof Exclusions & keyof Fs>, E>
-  withMetadata: (metadata: Record<string, string>) => Sdk<Fs, E, Exclusions>
+  functions: DirectClientFunctions<Omit<Fs, keyof Exclusions & keyof Fs>>
+  withMetadata: (metadata: Record<string, string>) => DirectClient<Fs, E, Exclusions>
 }
 
-type SdkFunctions<Fs extends functions.FunctionInterfaces, E extends functions.ErrorType> = {
-  [K in keyof Fs]: SdkFunction<Fs[K]['input'], Fs[K]['output'], Fs[K]['errors'], Fs[K]['retrieve']>
+type DirectClientFunctions<Fs extends functions.FunctionInterfaces> = {
+  [K in keyof Fs]: DirectClientFunction<Fs[K]['input'], Fs[K]['output'], Fs[K]['errors'], Fs[K]['retrieve']>
 }
 
-type SdkFunction<
+type DirectClientFunction<
   InputType extends model.Type,
   OutputType extends model.Type,
   E extends functions.ErrorType,
@@ -29,22 +29,13 @@ type SdkFunction<
         options?: [P] extends [never]
           ? { metadata?: Record<string, string> }
           : { retrieve?: P; metadata?: Record<string, string> },
-      ) => Promise<SdkFunctionResult<OutputType, E, C, P>>
+      ) => Promise<client.ClientFunctionResult<OutputType, E, C, P>>
     : <const P extends retrieve.FromType<OutputType, Exclude<C, undefined>>>(
         input: model.Infer<InputType>,
         options?: [P] extends [never]
           ? { metadata?: Record<string, string> }
           : { retrieve?: P; metadata?: Record<string, string> },
-      ) => Promise<SdkFunctionResult<OutputType, E, C, P>>
-
-type SdkFunctionResult<
-  O extends model.Type,
-  E extends functions.ErrorType,
-  C extends retrieve.FunctionCapabilities | undefined,
-  P extends retrieve.FromType<O, C>,
-> = [Exclude<E, undefined>] extends [never]
-  ? sdk.Project<O, P>
-  : result.Result<sdk.Project<O, P>, { [K in keyof Exclude<E, undefined>]: model.Infer<Exclude<E, undefined>[K]> }>
+      ) => Promise<client.ClientFunctionResult<OutputType, E, C, P>>
 
 /**
  * Builds a new client that will connect to a Mondrian Direct endpoint.
@@ -63,7 +54,7 @@ export function build<
   api: ApiSpecification<Fs, Exclusions>
   metadata?: Record<string, string>
   fetchOptions?: Omit<RequestInit, 'method' | 'headers' | 'body'> & { headers?: Record<string, string | undefined> }
-}): Sdk<Fs, E, Exclusions> {
+}): DirectClient<Fs, E, Exclusions> {
   const funcs = flatMapObject(api.module.functions, (functionName, functionBody) => {
     if (api.exclusions[functionName]) {
       return []
@@ -157,7 +148,7 @@ export function build<
   })
 
   return {
-    functions: funcs as unknown as Sdk<Fs, E, Exclusions>['functions'],
+    functions: funcs as unknown as DirectClient<Fs, E, Exclusions>['functions'],
     withMetadata: (metadata) => build({ endpoint, api, metadata }),
   }
 }

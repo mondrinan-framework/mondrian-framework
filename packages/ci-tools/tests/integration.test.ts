@@ -1,15 +1,17 @@
 import { module } from '../src/impl/module'
 //import { restAPI, moduleInterface } from '../src/interface'
 //import { rest } from '@mondrian-framework/rest'
-import { sdk } from '@mondrian-framework/module'
+import { client as clientBuilder } from '@mondrian-framework/module'
 import { buildSchema } from 'graphql'
 import { expect, test } from 'vitest'
 
 test('api test', async () => {
   process.env.SERVER_BASE_URL = 'http://localhost:4000'
-  const client = sdk.build({
+  const client = clientBuilder.build({
     module: module,
-    async context() {},
+    async context() {
+      return {}
+    },
   })
 
   const result = await client.functions.getReport({ reportId: '6e85a343-8474-4453-abe9-c13b098e1dba' })

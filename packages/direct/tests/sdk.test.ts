@@ -1,7 +1,7 @@
 import { DEFAULT_SERVE_OPTIONS } from '../src/api'
 import { build as buildApi } from '../src/api'
+import { build } from '../src/client'
 import { fromModule } from '../src/handler'
-import { build } from '../src/sdk'
 import { api } from './module.util'
 import { module } from '@mondrian-framework/module'
 import http from 'node:http'
@@ -19,7 +19,7 @@ const handler = fromModule({
 })
 const client = build({ endpoint: handler, api }).withMetadata({ auth: 'ok' })
 
-describe('direct sdk', () => {
+describe('direct client', () => {
   test('callign a function with no errors, no retrieve, should work', async () => {
     const r1 = await client.functions.ping(123)
     expect(r1).toBe(123)

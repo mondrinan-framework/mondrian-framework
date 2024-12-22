@@ -90,7 +90,7 @@ class NumberTypeImpl extends BaseType<model.NumberType> implements model.NumberT
       exclusiveMaximum - exclusiveMinimum <= 1
     ) {
       throw new Error(
-        `If both lower bound and upper bound are enabled on integer types the minimum difference between the two bounds must be grater than 1`,
+        `If both lower bound and upper bound are enabled on integer types the minimum difference between the two bounds must be greater than 1`,
       )
     }
     this.validator = new validation.Validator(

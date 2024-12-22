@@ -1,4 +1,4 @@
-import { build } from '../src/sdk'
+import { build } from '../src/client'
 import { serveWithFastify } from '../src/server/fastify'
 import { api } from './module.util'
 import { fastify } from 'fastify'

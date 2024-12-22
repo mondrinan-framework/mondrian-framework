@@ -269,6 +269,9 @@ export function generateOpenapiInput({
           for (const [key, subtype] of Object.entries(concreteInputType.fields as model.Types).filter(
             ([fieldName]) => !parametersInPath.includes(fieldName),
           )) {
+            if (object[key] === undefined) {
+              continue
+            }
             if (model.isScalar(subtype)) {
               params = (params ?? '') + `${key}=${String(object[key])}&`
             } else {

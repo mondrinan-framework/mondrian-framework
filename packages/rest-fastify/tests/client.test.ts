@@ -38,7 +38,7 @@ test('rest-fastify e2e test', async () => {
     errors: { BadInput: error.standard.BadInput, Unauthorized },
   })
   const f2 = functions.define({
-    input: model.object({ a: model.integer(), b: model.integer() }),
+    input: model.object({ a: model.integer().optional(), b: model.integer().optional() }),
     output: model.integer(),
     errors: { BadInput: error.standard.BadInput, Unauthorized },
   })
@@ -99,7 +99,7 @@ test('rest-fastify e2e test', async () => {
   })
   const f2Impl = f2.use({ providers: { authProvider } }).implement({
     async body({ input: { a, b } }) {
-      return result.ok(a * b)
+      return result.ok((a ?? 1) * (b ?? 1))
     },
   })
   const fComplexImpl = fComplex.use({ providers: { authProvider } }).implement({
@@ -163,7 +163,7 @@ test('rest-fastify e2e test', async () => {
     BadInput: {
       errors: [
         {
-          expected: 'number',
+          expected: 'number or undefined',
           got: 'hello',
           path: '$.a',
         },
@@ -186,7 +186,7 @@ test('rest-fastify e2e test', async () => {
     { name: 'John', age: 30, friends: ['123'] },
     {
       retrieve: {
-        select: { name: true, friends: { take: 10, select: { age: true } } },
+        select: { retrieve: true, name: true, friends: { take: 10, select: { age: true } } },
         where: { name: { equals: 'John' }, AND: [{ age: { in: [1, 2, 3] } }] },
         orderBy: [{ name: 'asc' }, { age: 'desc' }],
         skip: 0,
@@ -196,9 +196,7 @@ test('rest-fastify e2e test', async () => {
   )
   expect(response7.isOk && response7.value).toEqual([
     {
-      age: 30,
       friends: [],
-      id: '123',
       name: 'John',
       retrieve: {
         select: {
@@ -216,6 +214,25 @@ test('rest-fastify e2e test', async () => {
     },
   ])
 
+  const response7Bis = await restClient.functions.fComplex({ name: 'John', age: 30, friends: ['123'] })
+  expect(response7Bis.isOk && response7Bis.value).toEqual([
+    {
+      age: 30,
+      id: '123',
+      name: 'John',
+      retrieve: {
+        select: {
+          age: true,
+          id: true,
+          name: true,
+          retrieve: true,
+        },
+        skip: 0,
+        take: 20,
+      },
+    },
+  ])
+
   const response8 = await restClient.functions.fTextHtml()
   expect(response8).toEqual('<html>Hello, World!</html>')
 
@@ -225,5 +242,9 @@ test('rest-fastify e2e test', async () => {
   await expect(restClient.functions.fError2()).rejects.toThrow(
     'Error calling function fError2. Internal Server Error: Error 2',
   )
+
+  const response9 = await restClient.functions.f2({ a: 4 })
+  expect(response9.isOk && response9.value).toEqual(4 * 1)
+
   await server.close()
 })

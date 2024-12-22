@@ -9,11 +9,11 @@ export type DirectClient<
   E extends functions.ErrorType,
   Exclusions extends { [K in keyof Fs]?: true },
 > = {
-  functions: DirectClientFunctions<Omit<Fs, keyof Exclusions & keyof Fs>, E>
+  functions: DirectClientFunctions<Omit<Fs, keyof Exclusions & keyof Fs>>
   withMetadata: (metadata: Record<string, string>) => DirectClient<Fs, E, Exclusions>
 }
 
-type DirectClientFunctions<Fs extends functions.FunctionInterfaces, E extends functions.ErrorType> = {
+type DirectClientFunctions<Fs extends functions.FunctionInterfaces> = {
   [K in keyof Fs]: DirectClientFunction<Fs[K]['input'], Fs[K]['output'], Fs[K]['errors'], Fs[K]['retrieve']>
 }
 

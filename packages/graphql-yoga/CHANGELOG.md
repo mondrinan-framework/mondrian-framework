@@ -1,5 +1,16 @@
 # @mondrian-framework/graphql-yoga
 
+## 2.0.66
+
+### Patch Changes
+
+- Add decoding option override to rest api
+- Updated dependencies
+  - @mondrian-framework/graphql@2.0.66
+  - @mondrian-framework/model@2.0.66
+  - @mondrian-framework/module@2.0.66
+  - @mondrian-framework/utils@2.0.66
+
 ## 2.0.65
 
 ### Patch Changes

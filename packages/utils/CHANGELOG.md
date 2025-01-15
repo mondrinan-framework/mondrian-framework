@@ -1,5 +1,11 @@
 # @mondrian-framework/utils
 
+## 2.0.66
+
+### Patch Changes
+
+- Add decoding option override to rest api
+
 ## 2.0.65
 
 ### Patch Changes

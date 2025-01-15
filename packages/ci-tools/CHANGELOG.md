@@ -1,5 +1,17 @@
 # @mondrian-framework/ci-tools
 
+## 2.0.66
+
+### Patch Changes
+
+- Add decoding option override to rest api
+- Updated dependencies
+  - @mondrian-framework/aws-lambda-rest@2.0.66
+  - @mondrian-framework/model@2.0.66
+  - @mondrian-framework/module@2.0.66
+  - @mondrian-framework/rest@2.0.66
+  - @mondrian-framework/rest-fastify@2.0.66
+
 ## 2.0.65
 
 ### Patch Changes

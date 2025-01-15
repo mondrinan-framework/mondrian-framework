@@ -1,5 +1,14 @@
 # @mondrian-framework/cli
 
+## 2.0.66
+
+### Patch Changes
+
+- Add decoding option override to rest api
+- Updated dependencies
+  - @mondrian-framework/ci-tools@2.0.66
+  - @mondrian-framework/cli-commander@2.0.66
+
 ## 2.0.65
 
 ### Patch Changes

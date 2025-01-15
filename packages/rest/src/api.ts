@@ -1,6 +1,7 @@
 import { CustomTypeSpecifications } from './openapi'
 import { assertApiValidity } from './utils'
-import { functions, logger, module, retrieve, utils } from '@mondrian-framework/module'
+import { decoding } from '@mondrian-framework/model'
+import { functions, logger, module } from '@mondrian-framework/module'
 import { KeysOfUnion, http } from '@mondrian-framework/utils'
 import { OpenAPIV3_1 } from 'openapi-types'
 
@@ -29,6 +30,10 @@ export type ApiSpecification<Fs extends functions.FunctionInterfaces> = {
      * Default is /api
      */
     pathPrefix?: string
+    /**
+     * Preferred decoding options that will override the module ones.
+     */
+    decodingOptions?: decoding.Options
   }
   /**
    * Available openapi securities. The key is used as reference in the function specification.
@@ -105,6 +110,7 @@ export type FunctionSpecifications<F extends functions.FunctionInterface = funct
   namespace?: string | null
   security?: OpenAPIV3_1.SecurityRequirementObject[]
   contentType?: 'application/json' | 'text/plain' | 'text/html' | 'text/csv'
+  decodingOptions?: decoding.Options
 }
 
 /**

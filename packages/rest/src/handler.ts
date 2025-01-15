@@ -20,7 +20,7 @@ export function fromFunction<Fs extends functions.FunctionImplementations, Serve
   specification: FunctionSpecifications
   context: (serverContext: ServerContext) => Promise<module.FunctionsToContextInput<Fs>>
   onError?: ErrorHandler<functions.Functions, ServerContext>
-  api: Pick<ApiSpecification<functions.FunctionInterfaces>, 'errorCodes' | 'customTypeSchemas'>
+  api: Pick<ApiSpecification<functions.FunctionInterfaces>, 'errorCodes' | 'customTypeSchemas' | 'options'>
 }): http.Handler<ServerContext> {
   const gatherRawInput = generateGetInputFromRequest({
     functionBody,
@@ -50,14 +50,16 @@ export function fromFunction<Fs extends functions.FunctionImplementations, Serve
         //Context input retrieval
         const contextInput = await context(serverContext)
 
+        const decodingOptions =
+          specification.decodingOptions ?? api.options?.decodingOptions ?? module.options?.preferredDecodingOptions
         // Function call
         const applyResult = await functionBody.rawApply({
           rawRetrieve,
           rawInput,
           contextInput: contextInput as Record<string, unknown>,
           logger: thisLogger,
-          decodingOptions: { ...module.options?.preferredDecodingOptions, typeCastingStrategy: 'tryCasting' },
-          retrieveDecodingOptions: { ...module.options?.preferredDecodingOptions, typeCastingStrategy: 'tryCasting' },
+          decodingOptions: { ...decodingOptions, typeCastingStrategy: 'tryCasting' },
+          retrieveDecodingOptions: { ...decodingOptions, typeCastingStrategy: 'tryCasting' },
           mapper: { retrieve: (retrieve) => completeRetrieve(retrieve, functionBody.output) },
         })
 

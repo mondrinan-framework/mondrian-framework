@@ -55,21 +55,25 @@ export type Result<A> = result.Result<A, Error[]>
  *   - `expected`: describes the expected type
  *   - `got`: is the value that broke the expectation
  *   - `path`: is the path where the failure took place
+ *   - `variants` is an optional field that is used to signal in which union variants the error took place
+ *      the value is the variant name since they are tagged.
  *
  * @example Consider the following error:
  *          ```ts
- *          { expected: "string", got: 1, path: "$[1].foo" }
+ *          { expected: "string", got: 1, path: "$[1].foo", variants: ["User"] }
  *          ```
  *          Let's see step by step what this means:
  *          - `expected: "string"` the decoder expected to find a string value
  *          - `got: 1` but it got a value `1`, which is not a string
  *          - `path: "$[1].foo"` the error took place while decoding a field called `foo`
  *            in an object at index 1 of an array
+ *          - `variants: ["User"]` the error took place while decoding the `User` variant of the union
  */
 export type Error = {
   path: path.Path
   expected: string
   got: unknown
+  variants?: string[]
 }
 
 /**

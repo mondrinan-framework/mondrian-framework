@@ -6,5 +6,5 @@ const UUID_REGEX = /^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]
 export type UUIDType = model.CustomType<'UUID', {}, string>
 
 export function uuid(options?: model.BaseOptions): UUIDType {
-  return fromRegexes('UUID', 'Invalid Universally Unique Identifier', options, undefined, UUID_REGEX)
+  return fromRegexes('UUID', 'invalid UUID', options, undefined, UUID_REGEX)
 }

@@ -142,13 +142,20 @@ class UnionTypeImpl<Ts extends model.Types> extends BaseType<model.UnionType<Ts>
         const validateResult = concrete.validate(result.value as never, validationOptions)
         if (validateResult.isOk) {
           return decoding.succeed({ variantName, value: result.value, validated: true, validationErrors: [] })
-        } else if (potentialDecoded === null) {
+        } else {
           //keep this as potential variant but it will not validate
-          validationErrors.push(...validateResult.error)
-          potentialDecoded = { variantName, value: result.value }
+          validationErrors.push(
+            ...validateResult.error.map((v) => ({
+              ...v,
+              variants: v.variants ? [variantName, ...v.variants] : [variantName],
+            })),
+          )
+          potentialDecoded = potentialDecoded ?? { variantName, value: result.value }
         }
       } else {
-        decodingErrors.push(...result.error)
+        decodingErrors.push(
+          ...result.error.map((v) => ({ ...v, variants: v.variants ? [variantName, ...v.variants] : [variantName] })),
+        )
       }
     }
     if (potentialDecoded !== null) {

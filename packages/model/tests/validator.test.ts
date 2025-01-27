@@ -465,6 +465,20 @@ describe.concurrent('validation.validate', () => {
   })
 
   describe.concurrent('on union types', () => {
+    test(' variants error correctly', () => {
+      const Model = model.union({
+        obj: model.object({
+          a: model.union({ bln: model.boolean(), uuid: model.uuid(), email: model.string({ minLength: 10 }) }),
+        }),
+        str: model.object({ a: model.string({ maxLength: 1 }) }),
+      })
+      const res1 = Model.validate({ a: '123' }, { errorReportingStrategy: 'allErrors' })
+      expect(res1.isFailure && res1.error).toStrictEqual([
+        { assertion: 'invalid UUID', got: '123', path: '$.a', variants: ['obj', 'uuid'] },
+        { assertion: 'string shorter than min length (10)', got: '123', path: '$.a', variants: ['obj', 'email'] },
+        { assertion: 'string longer than max length (1)', got: '123', path: '$.a', variants: ['str'] },
+      ])
+    })
     test.prop([gen.anything()])('succeeds if variant is valid', (value) => {
       const Model = model.union({ variant1: alwaysSuccess, variant2: alwaysFail })
       assertOk(Model.validate(value))
@@ -472,7 +486,10 @@ describe.concurrent('validation.validate', () => {
 
     test.prop([gen.anything()])('fails is variant is invalid', (value) => {
       const Model = model.union({ variant1: alwaysFail, variant2: alwaysFail })
-      const expectedError = [{ got: value, path: path.root }]
+      const expectedError = [
+        { assertion: 'test', got: value, path: path.root, variants: ['variant1'] },
+        { assertion: 'test', got: value, path: path.root, variants: ['variant2'] },
+      ]
       checkError(Model.validate(value), expectedError)
     })
   })

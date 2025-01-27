@@ -743,6 +743,27 @@ describe.concurrent('decoding.decodeWithoutValidation', () => {
   describe.concurrent('union value', () => {
     const Model = model.union({ variant1: model.number(), variant2: model.string().optional() })
 
+    test('gets variants error correctly', () => {
+      const Model = model.union({
+        obj: model.object({ a: model.union({ bln: model.boolean(), uuid: model.uuid() }) }),
+        str: model.string().optional(),
+      })
+      const res1 = Model.decodeWithoutValidation({ a: 123 }, { errorReportingStrategy: 'allErrors' })
+      expect(res1.isFailure && res1.error).toStrictEqual([
+        { expected: 'boolean', got: 123, path: '$.a', variants: ['obj', 'bln'] },
+        { expected: 'Expected a string value', got: 123, path: '$.a', variants: ['obj', 'uuid'] },
+        { expected: 'string or undefined', got: { a: 123 }, path: '$', variants: ['str'] },
+      ])
+
+      const res2 = Model.decodeWithoutValidation({ c: 123 }, { errorReportingStrategy: 'allErrors' })
+      expect(res2.isFailure && res2.error).toStrictEqual([
+        { expected: 'undefined', got: 123, path: '$.c', variants: ['obj'] },
+        { expected: 'boolean', got: undefined, path: '$.a', variants: ['obj', 'bln'] },
+        { expected: 'Expected a string value', got: undefined, path: '$.a', variants: ['obj', 'uuid'] },
+        { expected: 'string or undefined', got: { c: 123 }, path: '$', variants: ['str'] },
+      ])
+    })
+
     test.prop([number.filter((n) => n % 2 === 0)])('can decode its variant', (number) => {
       checkValue(Model.decodeWithoutValidation(number), number)
     })

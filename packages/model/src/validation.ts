@@ -40,6 +40,8 @@ export type Result = result.Result<true, Error[]>
  *  - `assertion`: a string describing the assertion that failed
  *  - `got`: is the value that broke the assertion
  *  - `path`: is the path where the failure took place
+ *  - `variants` is an optional field that is used to signal in which union variants the error took place
+ *     the value is the variant name since they are tagged.
  *
  * @example Consider the following error:
  *          ```ts
@@ -55,6 +57,7 @@ export type Error = {
   path: path.Path
   assertion: string
   got: unknown
+  variants?: string[]
 }
 
 /**

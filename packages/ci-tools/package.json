@@ -12,10 +12,10 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.529.1",
-    "@graphql-inspector/core": "6.2.0",
+    "@aws-sdk/client-s3": "3.735.0",
+    "@graphql-inspector/core": "6.2.1",
     "@pb33f/openapi-changes": "0.0.69",
-    "fastify": "^5.1.0"
+    "fastify": "^5.2.1"
   },
   "peerDependencies": {
     "@mondrian-framework/aws-lambda-rest": "^2.0.66",

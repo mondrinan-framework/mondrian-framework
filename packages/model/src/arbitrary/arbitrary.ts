@@ -522,7 +522,6 @@ export function customType(maxDepth: number): gen.Arbitrary<model.Type> {
     gen.constant(model.currency()),
     gen.constant(model.date()),
     gen.constant(model.datetime()),
-    gen.constant(model.decimal()),
     gen.constant(model.email()),
     gen.constant(model.ip()),
     gen.constant(model.isbn()),

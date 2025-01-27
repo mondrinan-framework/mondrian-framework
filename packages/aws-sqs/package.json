@@ -11,7 +11,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@aws-sdk/client-sqs": "^3.529.1"
+    "@aws-sdk/client-sqs": "^3.734.0"
   },
   "peerDependencies": {
     "@mondrian-framework/model": "^2.0.66",

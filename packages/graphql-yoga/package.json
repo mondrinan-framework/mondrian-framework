@@ -11,10 +11,10 @@
     "build": "tsc"
   },
   "dependencies": {
-    "graphql-yoga": "^5.10.2"
+    "graphql-yoga": "^5.10.11"
   },
   "peerDependencies": {
-    "fastify": "^5.1.0",
+    "fastify": "^5.2.1",
     "@mondrian-framework/model": "^2.0.66",
     "@mondrian-framework/module": "^2.0.66",
     "@mondrian-framework/utils": "^2.0.66",

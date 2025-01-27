@@ -11,8 +11,10 @@
     "build": "tsc"
   },
   "dependencies": {
-    "aws-lambda": "1.0.7",
-    "@types/aws-lambda": "8.10.145"
+    "aws-lambda": "1.0.7"    
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.147"
   },
   "peerDependencies": {
     "@mondrian-framework/model": "^2.0.66",

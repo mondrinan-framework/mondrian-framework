@@ -22,6 +22,6 @@
     "@mondrian-framework/utils": "^2.0.66"
   },
   "devDependencies": {
-    "graphql-yoga": "^5.10.2"
+    "graphql-yoga": "^5.10.11"
   }
 }

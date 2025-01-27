@@ -3,7 +3,7 @@ import { assertApiValidity } from './utils'
 import { decoding } from '@mondrian-framework/model'
 import { functions, logger, module } from '@mondrian-framework/module'
 import { KeysOfUnion, http } from '@mondrian-framework/utils'
-import { OpenAPIV3_1 } from 'openapi-types'
+import type { OpenAPIV3_1 } from 'openapi-types'
 
 /**
  * The REST API specification of a mondrian {@link module.ModuleInterface ModuleInterface}

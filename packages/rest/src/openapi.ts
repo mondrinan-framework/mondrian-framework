@@ -3,8 +3,7 @@ import { decodeQueryObject, encodeQueryObject, methodFromOptions } from './utils
 import { model } from '@mondrian-framework/model'
 import { functions, retrieve } from '@mondrian-framework/module'
 import { isArray, http, JSONType } from '@mondrian-framework/utils'
-import BigNumber from 'bignumber.js'
-import { OpenAPIV3_1 } from 'openapi-types'
+import type { OpenAPIV3_1 } from 'openapi-types'
 
 export type CustomTypeSpecifications = Record<
   string,
@@ -570,17 +569,6 @@ function customToOpenAPIComponent(
     return { type: 'string', format: 'uuid', description: type.options?.description }
   } else if (type.typeName === model.url().typeName) {
     return { type: 'string', format: 'url', description: type.options?.description }
-  } else if (type.typeName === model.decimal().typeName) {
-    //TODO [Good first issue]: can we add a ragex based on `opts` that describe the decimal value?
-    const opts = (type.options ?? {}) as model.DecimalTypeAdditionalOptions
-    const defaultDescription = `decimal value of base ${opts.base ?? 10}${
-      opts.decimals != null ? ` and ${opts.decimals} decimals` : ''
-    }`
-    return {
-      type: 'string',
-      description: type.options?.description ?? defaultDescription,
-      example: (type.example({ seed: 0 }) as BigNumber).toString(opts.base),
-    }
   } else if (type.typeName === model.jwt({}, 'ES256').typeName) {
     const options = type.options as model.JwtOptions
     const payloadSchema = modelToSchema((type.options as model.JwtOptions).payloadType, internalData)

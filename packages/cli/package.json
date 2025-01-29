@@ -12,7 +12,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "commander": "11.1.0"
+    "commander": "13.1.0"
   },
   "peerDependencies": {
     "@mondrian-framework/ci-tools": "^2.0.66",

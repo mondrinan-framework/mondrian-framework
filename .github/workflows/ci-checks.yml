@@ -27,7 +27,7 @@ jobs:
       - name: Run tests
         run: rm node_modules/graphql/index.mjs && npx vitest run --coverage
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:

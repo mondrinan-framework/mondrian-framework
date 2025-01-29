@@ -21,8 +21,6 @@
     "bignumber.js": "^9.1.2"
   },
   "devDependencies": {
-    "@fast-check/vitest": "^0.1.4",
-    "@vitest/coverage-v8": "^3.0.4",
     "@types/jsonwebtoken": "^9.0.8"
   }
 }

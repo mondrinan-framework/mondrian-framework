@@ -351,7 +351,7 @@ describe('Default middlewares', () => {
           { retrieve: { select: { type: { select: { type: { select: {} } } } } } },
         ),
     ).rejects.toThrowError('Max selection depth reached: requested selection have a depth of 3. The maximum is 2.')
-    expect(async () => await client.functions.dummy({ value: 'wrong' })).rejects.toThrowError(
+    await expect(async () => await client.functions.dummy({ value: 'wrong' })).rejects.toThrowError(
       'Invalid output on function dummy. Errors: (1) {"expected":"string","path":"$.value"}',
     )
   })

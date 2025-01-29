@@ -495,17 +495,17 @@ test('Errors return', async () => {
   expect(r2.isFailure && r2.error).toEqual({ error2: { a: 'ok' } })
   const r3 = await client.functions.errorTest('3')
   expect(r3.isFailure && r3.error).toEqual({ error2: { a: 'ok' }, error1: 'ok' })
-  expect(() => client.functions.errorTest('4')).rejects.toThrowError(
+  await expect(() => client.functions.errorTest('4')).rejects.toThrowError(
     'Invalid output on function errorTest. Errors: (1) {"expected":"An object with at least one of this field: error1, error2","got":{},"path":"$"}',
   )
-  expect(() => client.functions.errorTest('5')).rejects.toThrowError(
+  await expect(() => client.functions.errorTest('5')).rejects.toThrowError(
     'Invalid output on function errorTest. Errors: (1) {"expected":"string or undefined","got":"1970-01-01T00:00:00.001Z","path":"$.error1"}',
   )
-  expect(() => client.functions.errorTest('6')).rejects.toThrowError(
+  await expect(() => client.functions.errorTest('6')).rejects.toThrowError(
     'Invalid output on function errorTest. Errors: (1) {"expected":"undefined","got":1,"path":"$.wrong"}',
   )
 
-  expect(() => client.functions.unfailableFunction('1')).rejects.toThrowError(
+  await expect(() => client.functions.unfailableFunction('1')).rejects.toThrowError(
     "Unexpected failure on function unfailableFunction. It doesn't declare errors nor the module declares errors.",
   )
 })

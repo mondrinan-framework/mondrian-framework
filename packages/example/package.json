@@ -21,8 +21,8 @@
     "@mondrian-framework/rest-fastify": "*",
     "@mondrian-framework/graphql-yoga": "*",
     "@mondrian-framework/rate-limiter": "*",
-    "@prisma/client": "6.2.1",
-    "prisma": "6.2.1",
+    "@prisma/client": "6.3.0",
+    "prisma": "6.3.0",
     "jsonwebtoken": "9.0.2",
     "rest": "2.0.0",
     "@opentelemetry/sdk-node": "0.57.1",
@@ -31,7 +31,7 @@
     "@fastify/cors": "10.0.2",
     "@opentelemetry/instrumentation-http": "0.57.1",
     "@opentelemetry/instrumentation-fastify": "0.44.1",
-    "@prisma/instrumentation": "6.2.1",
+    "@prisma/instrumentation": "6.3.0",
     "@opentelemetry/instrumentation-graphql": "0.47.0"
   },
   "devDependencies": {

@@ -5,9 +5,9 @@
 
 [Homepage](https://mondrianframework.com/)
 
-Mondrian is a groundbreaking framework designed for developers who demand type safety, functional programming paradigms, and seamless compliance with modern API standards. Unlike traditional frameworks, Mondrian requires no code generation. Define your data models and services in an intuitive, human-readable format, and instantly gain OpenAPI, GraphQL, and Protobuf (coming soon) specifications and servers for your backend. Mondrian's robust type system and functional approach ensure that your applications are both scalable and maintainable, providing a powerful toolset for building next-generation software.
+Mondrian is a TypeScript framework focused on type safety, functional programming, and modern API standards compatibility. It offers a streamlined approach to backend development by enabling developers to define data models and services in a readable format, which can then be used to generate OpenAPI, GraphQL, and Protobuf (coming soon) specifications and servers. Mondrian does not require an explicit generation step thanks to the power of Typescript.
 
-Some cool features:
+Key features:
 
 - **Decoding / Encoding of the Data Model**: Data decoding and encoding is handled automatically by the framework, ensuring that the input always respects its format when a service is called.
 - **Specification for errors**: Define errors as part of your model, ensuring robust and predictable error handling without the use of imperative exceptions.
